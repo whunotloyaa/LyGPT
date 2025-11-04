@@ -1,0 +1,11 @@
+[build]
+  command = "npm run netlify-build"
+  publish = "dist"
+
+[dev]
+  framework = "parcel"
+
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

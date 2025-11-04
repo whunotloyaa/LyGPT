@@ -1,0 +1,16 @@
+{
+  "name": "lygpt",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "parcel src/index.html --open",
+    "build": "parcel build src/index.html --public-url ./",
+    "netlify-build": "npm run build"
+  },
+  "devDependencies": {
+    "parcel": "^2.9.3"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+}
