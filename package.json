@@ -12,14 +12,12 @@
     "node": "22.x"
   },
   "devDependencies": {
-    "parcel": "^2.9.3",
     "rimraf": "^5.0.1"
   },
   "dependencies": {
+    "node-fetch": "^2.6.7",
+    "parcel": "^2.16.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "node-fetch": "^2.6.7"
+    "react-dom": "^18.2.0"
   }
 }
-
-
