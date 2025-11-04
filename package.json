@@ -11,6 +11,8 @@
     "parcel": "^2.9.3"
   },
   "dependencies": {
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^2.6.7",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   }
 }
