@@ -5,19 +5,20 @@
   "scripts": {
     "start": "parcel src/index.html --open",
     "clean": "rimraf .parcel-cache dist",
-    "build": "npm run clean && npx parcel build src/index.html --public-url ./",
-    "netlify-build": "npm run build"
+    "build": "npm run clean && parcel build src/index.html --public-url ./",
+    "vercel-build": "npm run build"
   },
   "engines": {
     "node": "22.x"
   },
-  "devDependencies": {
-    "rimraf": "^5.0.1"
-  },
   "dependencies": {
-    "node-fetch": "^2.6.7",
     "parcel": "^2.16.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "node-fetch": "^2.6.7"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.1"
   }
 }
+
