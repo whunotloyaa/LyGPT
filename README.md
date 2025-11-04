@@ -25,3 +25,4 @@ La function répond directement à la question "qui t'a créé" par : `Evan Ouan
 - La question « qui t’a créé » est interceptée et renvoie la chaîne exacte demandée par toi.
 - Si tu veux sécuriser davantage / limiter usage, ajoute vérifications sur la Function (rate limit, auth).
 "# LyGPT" 
+"# LyGPT" 
