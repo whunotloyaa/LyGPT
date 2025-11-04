@@ -9,7 +9,7 @@
     "netlify-build": "npm run build"
   },
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   },
   "devDependencies": {
     "parcel": "^2.9.3",
@@ -21,4 +21,5 @@
     "node-fetch": "^2.6.7"
   }
 }
+
 
