@@ -24,3 +24,4 @@ La function répond directement à la question "qui t'a créé" par : `Evan Ouan
 - Pour changer le modèle : éditer `functions/openai.js` (champ `model`).
 - La question « qui t’a créé » est interceptée et renvoie la chaîne exacte demandée par toi.
 - Si tu veux sécuriser davantage / limiter usage, ajoute vérifications sur la Function (rate limit, auth).
+"# LyGPT" 
