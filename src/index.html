@@ -20,7 +20,6 @@
   }
   .container{ max-width:980px; margin:auto; padding:28px; flex:1; display:flex; flex-direction:column; gap:12px;}
   h1{ text-align:center; color:#ffb3b3; margin:0 0 8px; text-shadow:0 0 10px rgba(255,50,50,0.7);}
-  .small{ font-size:0.85rem; color:#ddd; }
   .chat{ background:rgba(0,0,0,0.45); padding:16px; border-radius:12px; min-height:360px; overflow:auto; box-shadow:0 0 20px rgba(255,0,0,0.25);}
   .controls{ display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; }
   input[type="text"] { padding:10px; border-radius:8px; border:none; background: rgba(0,0,0,0.5); color:#fff; min-width:220px;}
@@ -38,37 +37,34 @@
 </head>
 <body>
   <div class="container">
-    <h1>🚀 LyGPT </h1>
-
+    <h1>🚀 LyGPT</h1>
     <div class="chat" id="chat" aria-live="polite" role="log"></div>
-
     <div class="controls">
       <input id="q" type="text" placeholder="Ex: génère un script express sqlite" />
       <button id="sendBtn">Envoyer</button>
     </div>
   </div>
-
   <footer>Développé et réalisé par Loyaa</footer>
 
 <script>
-// --- OPENAI CONFIG ---
-const OPENAI_API_KEY = "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"; // <== mets ta clé ici
+// --- CONFIG OPENAI ---
+const OPENAI_API_KEY = "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"; // <== mets ta clé ici
 const MODEL = "gpt-4o-mini";
 const BOT_NAME = "LyGPT";
-const DEFAULT_USER = "user01";
 
-// ---------- util ----------
-function nowISO(){ return (new Date()).toISOString(); }
-function escapeHtml(unsafe){ return (unsafe||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
+// ---------- UTIL ----------
+function escapeHtml(unsafe){ 
+  return (unsafe||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); 
+}
 
-// ---------- chat rendering ----------
+// ---------- CHAT RENDERING ----------
 const chatEl = document.getElementById("chat");
 function append(role, text){
   const d = document.createElement("div");
   d.className = role;
   const header = role === "user" ? "👤 Toi:" : `🤖 ${BOT_NAME}:`;
-  let safe = escapeHtml(text || "");
-  safe = safe.replace(/```(js|py)?\n([\s\S]*?)```/g, (m,lang,code)=>{
+  let safe = escapeHtml(text);
+  safe = safe.replace(/```(js|py)?\n([\s\S]*?)```/g, (_,lang,code)=>{
     return `<pre><code>${escapeHtml(code)}</code></pre>`;
   }).replace(/\n/g,"<br>");
   d.innerHTML = `<strong>${header}</strong><div>${safe}</div>`;
@@ -76,7 +72,7 @@ function append(role, text){
   chatEl.scrollTop = chatEl.scrollHeight;
 }
 
-// ---------- OPENAI API call ----------
+// ---------- OPENAI API CALL ----------
 async function sendOpenAI(userText){
   if(!OPENAI_API_KEY) return "Erreur: pas de clé API définie.";
   try{
@@ -101,7 +97,7 @@ async function sendOpenAI(userText){
   }
 }
 
-// ---------- UI wiring ----------
+// ---------- UI WIRING ----------
 document.getElementById("sendBtn").addEventListener("click", send);
 document.getElementById("q").addEventListener("keydown", e => { if(e.key === "Enter") send(); });
 
@@ -111,18 +107,12 @@ async function send(){
   if(!v) return;
   append("user", v);
   qEl.value = "";
-
-  // appeler OpenAI
   const response = await sendOpenAI(v);
   append("bot", response);
 }
 
-// initialize UI state
-(function init(){
-  append("bot", "Salut de quoi as-tu besoin, j'ai été dev par Loyaa et je suis là pour t'aider.");
-})();
+// INITIALIZE
+append("bot", "Salut ! De quoi as-tu besoin ? Je suis LyGPT, développé par Loyaa.");
 </script>
 </body>
 </html>
-
-
