@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>LyGPT — Frontend local</title>
+<title>LyGPT — Frontend OpenAI</title>
 <style>
   @keyframes nebula {
     0% {background-position: 0% 50%;}
@@ -51,76 +51,17 @@
   <footer>Développé et réalisé par Loyaa</footer>
 
 <script>
-/* Portage JS de human_assistant.py (mode local uniquement)
-   - détection banned keywords
-   - templates
-   - logique locale
-   - historique local (non affiché)
-*/
-
+// --- OPENAI CONFIG ---
+const OPENAI_API_KEY = "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"; // <== mets ta clé ici
+const MODEL = "gpt-4o-mini";
 const BOT_NAME = "LyGPT";
 const DEFAULT_USER = "user01";
-const BANNED_KEYWORDS = [
-  "stealer","rat","ransom","ransomware","malware","keylogger",
-  "idos","dos","botnet","exploit","oday","cheat","aimbot","wallback",
-  "phishing","cracker","token grab","tokengrabbler","password dumper",
-  "credit card","carder","skimmer","exploit","shellcode","reverse shell"
-];
-
-const TEMPLATES = {
-  express_api: `// Express minimal CRUD example (JS)
-const express = require('express'), app = express();
-app.use(express.json());
-let items = [];
-app.get('/items',(req,res)=>res.json(items));
-app.post('/items',(req,res)=>{
-  const i = { id: items.length+1, ...req.body };
-  items.push(i);
-  res.json(i);
-});
-app.listen(3000,()=>console.log('Listening :3000'));`,
-  python_starter: `# Python starter
-def main():
-    print('Dis-moi précisément ce que tu veux: langage, objectif, framework')
-
-if __name__ == '__main__':
-    main()`
-};
 
 // ---------- util ----------
 function nowISO(){ return (new Date()).toISOString(); }
-function containsBanned(text){
-  const t = (text||"").toLowerCase();
-  for(const kw of BANNED_KEYWORDS){
-    if(t.includes(kw)) return [true, kw];
-  }
-  return [false, null];
-}
-function humanize(text){
-  const prefixes = ["","Frérot, ",""];
-  const suffixes = [""," 😉"," 🔥"," ✅"," 😎"];
-  return prefixes[Math.floor(Math.random()*prefixes.length)] + text + suffixes[Math.floor(Math.random()*suffixes.length)];
-}
-function escapeHtml(unsafe){
-  if(!unsafe) return "";
-  return unsafe.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-}
+function escapeHtml(unsafe){ return (unsafe||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
 
-// ---------- history (localStorage) ----------
-const HISTORY_KEY = "lygpt_history_v1";
-function saveHistory(user, message, response){
-  try{
-    const h = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-    h.unshift({ user, message, response, ts: nowISO() });
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0,500)));
-  }catch(e){ console.warn("saveHistory", e); }
-}
-function getHistory(n=50){
-  try{ return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]").slice(0,n); }
-  catch(e){ return []; }
-}
-
-// ---------- render ----------
+// ---------- chat rendering ----------
 const chatEl = document.getElementById("chat");
 function append(role, text){
   const d = document.createElement("div");
@@ -135,88 +76,53 @@ function append(role, text){
   chatEl.scrollTop = chatEl.scrollHeight;
 }
 
-// ---------- assistant logic (local) ----------
-function localRespond(userText){
-  const text = (userText||"").trim();
-  if(!text) return humanize("Écris quelque chose, frérot.");
-
-  const [banned, kw] = containsBanned(text);
-  if(banned){
-    const resp = humanize(
-      `Je ne peux pas t'aider sur ce sujet (${kw}). ` +
-      "Si tu veux, je peux:\n- t'expliquer de façon théorique les concepts (sécurité informatique, tests, etc.)\n- te fournir des exercices et labs légaux\n- t'aider à écrire des outils d'administration/scripting légitimes\n"
-    );
-    saveHistory(DEFAULT_USER, text, resp);
-    return resp;
+// ---------- OPENAI API call ----------
+async function sendOpenAI(userText){
+  if(!OPENAI_API_KEY) return "Erreur: pas de clé API définie.";
+  try{
+    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [{role:"user", content: userText}],
+        max_tokens:800,
+        temperature:0.2
+      })
+    });
+    const data = await resp.json();
+    return data.choices?.[0]?.message?.content || "Pas de réponse.";
+  }catch(e){
+    console.error("OpenAI error", e);
+    return "Erreur API OpenAI";
   }
-
-  const low = text.toLowerCase();
-
-  if(/\b(salut|hello|hey|yo|coucou)\b/.test(low)){
-    const r = humanize(`Salut ${DEFAULT_USER} — dis-moi ce que tu veux coder, apprendre ou rechercher.`);
-    saveHistory(DEFAULT_USER, text, r);
-    return r;
-  }
-  if(/\b(ça va|comment ça va|bien|quoi de neuf)\b/.test(low)){
-    const r = humanize("Ça roule — prêt à t'aider. Tu veux un snippet, un guide ou un tuto ?");
-    saveHistory(DEFAULT_USER, text, r);
-    return r;
-  }
-
-  const m = low.match(/(génèr|donne|fais|file|crée|écris|generate|create)\s+(un|une|des)?\s*(.*)/);
-  if(m){
-    const topic = (m[3]||"").trim();
-    if(topic.includes("express") || topic.includes("api")){
-      const snippet = TEMPLATES.express_api;
-      const resp = `Ok, voilà un starter Express pour une API simple :\n\n\`\`\`js\n${snippet}\n\`\`\`\nVeux-tu que je l'adapte (DB, auth) ?`;
-      saveHistory(DEFAULT_USER, text, resp);
-      return resp;
-    }
-    if(topic.includes("python") || topic.includes("starter")){
-      const snippet = TEMPLATES.python_starter;
-      const resp = `Voici un starter Python :\n\n\`\`\`py\n${snippet}\n\`\`\`\nDis-moi l'objectif exact et j'adapte.`;
-      saveHistory(DEFAULT_USER, text, resp);
-      return resp;
-    }
-    // fallback
-    const snippet = TEMPLATES.python_starter;
-    const resp = `Je peux te faire ça. En attendant, un starter :\n\n\`\`\`py\n${snippet}\n\`\`\`\nPrécise langage + objectif.`;
-    saveHistory(DEFAULT_USER, text, resp);
-    return resp;
-  }
-
-  const m2 = low.match(/(comment|comment faire|how to)\s+(.*)/);
-  if(m2){
-    const topic = (m2[2]||"").trim();
-    const resp = humanize(`Pour ${topic}, commence par définir l'objectif précis, choisis le langage et cherche une librairie adaptée. Je peux te donner un guide pas-à-pas si tu précises langage et but.`);
-    saveHistory(DEFAULT_USER, text, resp);
-    return resp;
-  }
-
-  const fallback = humanize("J'ai pas tout saisi — dis en 1 phrase : langage (python/js), objectif (API, scraping, automation), framework ?");
-  saveHistory(DEFAULT_USER, text, fallback);
-  return fallback;
 }
 
 // ---------- UI wiring ----------
 document.getElementById("sendBtn").addEventListener("click", send);
 document.getElementById("q").addEventListener("keydown", e => { if(e.key === "Enter") send(); });
 
-function send(){
+async function send(){
   const qEl = document.getElementById("q");
-  const v = (qEl.value || "").trim();
+  const v = (qEl.value||"").trim();
   if(!v) return;
   append("user", v);
   qEl.value = "";
-  const local = localRespond(v);
-  append("bot", local);
+
+  // appeler OpenAI
+  const response = await sendOpenAI(v);
+  append("bot", response);
 }
 
 // initialize UI state
 (function init(){
-  append("bot", humanize("Salut de quoi as tu besoins, j'ai été dev par loyaa et je suis la pour t'aider."));
+  append("bot", "Salut de quoi as-tu besoin, j'ai été dev par Loyaa et je suis là pour t'aider.");
 })();
 </script>
 </body>
 </html>
+
 
