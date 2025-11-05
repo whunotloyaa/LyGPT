@@ -47,11 +47,6 @@
   <footer>Développé et réalisé par Loyaa</footer>
 
 <script>
-// --- CONFIG OPENAI ---
-const OPENAI_API_KEY = "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"; // <== mets ta clé ici
-const MODEL = "gpt-4o-mini";
-const BOT_NAME = "LyGPT";
-
 // ---------- UTIL ----------
 function escapeHtml(unsafe){ 
   return (unsafe||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); 
@@ -62,7 +57,7 @@ const chatEl = document.getElementById("chat");
 function append(role, text){
   const d = document.createElement("div");
   d.className = role;
-  const header = role === "user" ? "👤 Toi:" : `🤖 ${BOT_NAME}:`;
+  const header = role === "user" ? "👤 Toi:" : `🤖 LyGPT:`;
   let safe = escapeHtml(text);
   safe = safe.replace(/```(js|py)?\n([\s\S]*?)```/g, (_,lang,code)=>{
     return `<pre><code>${escapeHtml(code)}</code></pre>`;
@@ -72,27 +67,18 @@ function append(role, text){
   chatEl.scrollTop = chatEl.scrollHeight;
 }
 
-// ---------- OPENAI API CALL ----------
+// ---------- OPENAI API CALL VIA BACKEND ----------
 async function sendOpenAI(userText){
-  if(!OPENAI_API_KEY) return "Erreur: pas de clé API définie.";
-  try{
-    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization": `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [{role:"user", content: userText}],
-        max_tokens:800,
-        temperature:0.2
-      })
+  try {
+    const resp = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userText })
     });
     const data = await resp.json();
-    return data.choices?.[0]?.message?.content || "Pas de réponse.";
-  }catch(e){
-    console.error("OpenAI error", e);
+    return data.reply || "Pas de réponse.";
+  } catch(e) {
+    console.error(e);
     return "Erreur API OpenAI";
   }
 }
