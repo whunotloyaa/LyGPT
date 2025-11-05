@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
         "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-3.5-turbo",
         messages: [{ role: "user", content: message }],
         max_tokens: 800,
         temperature: 0.2
@@ -34,5 +34,6 @@ module.exports = async function handler(req, res) {
     res.status(500).json({ reply: "Erreur API OpenAI" });
   }
 };
+
 
 
