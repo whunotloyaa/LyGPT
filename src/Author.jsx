@@ -6,7 +6,7 @@ export default function Author() {
       <h2>À propos du créateur</h2>
       <p><strong>Evan Ouanoune</strong></p>
       <p>Créateur et développeur de LyGPT.</p>
-      <p>Contact / infos : (ajoute ici ce que tu veux)</p>
+      <p>Contact / infos : (discord : cgqp / snap : evvn.as / github : whunotloyaa)</p>
     </div>
   );
 }
