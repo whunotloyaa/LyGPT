@@ -57,7 +57,7 @@ const chatEl = document.getElementById("chat");
 function append(role, text){
   const d = document.createElement("div");
   d.className = role;
-  const header = role === "user" ? "👤 Toi:" : `🤖 LyGPT:`;
+  const header = role === "user" ? " user:" : ` LyGPT:`;
   let safe = escapeHtml(text);
   safe = safe.replace(/```(js|py)?\n([\s\S]*?)```/g, (_,lang,code)=>{
     return `<pre><code>${escapeHtml(code)}</code></pre>`;
