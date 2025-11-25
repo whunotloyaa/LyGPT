@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LyGPT 🚀</title>
-    <style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>LyGPT</title>
+<style>
         * {
             margin: 0;
             padding: 0;
@@ -235,199 +235,140 @@
                 max-width: 90%;
             }
         }
-    </style>
+</style>
 </head>
 <body>
-    <!-- Fond d'étoiles animé -->
-    <div class="stars" id="stars"></div>
+  <!-- Fond d'étoiles animé -->
+  <div class="stars" id="stars"></div>
 
-    <!-- En-tête -->
-    <header>
-        <div class="logo">LyGPT</div>
-        <div class="header-actions">
-            <button class="action-btn" id="new-chat-btn">NOUVEAU CHAT</button>
-            <button class="action-btn" id="save-chat-btn">SAUVEGARDER</button>
-            <button class="action-btn" id="load-chat-btn">CHARGER</button>
-        </div>
-    </header>
+  <!-- En-tête -->
+  <header>
+    <div class="logo">🚀 LyGPT</div>
+    <div class="header-actions">
+      <button class="action-btn" id="new-chat-btn">NOUVEAU CHAT</button>
+      <button class="action-btn" id="save-chat-btn">SAUVEGARDER</button>
+      <button class="action-btn" id="load-chat-btn">CHARGER</button>
+    </div>
+  </header>
 
-    <!-- Contenu principal -->
-    <main>
-        <div class="chat-area" id="chat-area">
-            <div class="message lygpt-message">
-                Salut ! Je suis LyGPT, créé par Evan Ouanoune. Comment puis-je vous aider aujourd'hui ?
-            </div>
-        </div>
+  <!-- Contenu principal -->
+  <main>
+    <div class="chat-area" id="chat" aria-live="polite" role="log">
+      <div class="message lygpt-message">
+        Salut ! De quoi as-tu besoin ? Je suis LyGPT, développé par Loyaa.
+      </div>
+    </div>
 
-        <div class="typing-indicator" id="typing-indicator">
-            <div class="typing-dots">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-            </div>
-        </div>
+    <div class="input-container">
+      <input type="text" class="message-input" id="q" placeholder="Ecrie quelque chose autiste va" />
+      <button class="send-btn" id="sendBtn">Envoyer</button>
+    </div>
+  </main>
 
-        <div class="input-container">
-            <input type="text" class="message-input" id="message-input" placeholder="Écrire quelque chose...">
-            <button class="send-btn" id="send-btn">ENVOYER</button>
-        </div>
-    </main>
+  <footer>Développé et réalisé par Ly</footer>
 
-    <!-- Pied de page -->
-    <footer>
-        Développé et réalisé par Evan Ouanoune
-    </footer>
+<script>
+// Création des étoiles animées
+function createStars() {
+    const starsContainer = document.getElementById('stars');
+    const starCount = 150;
+    
+    for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        star.classList.add('star');
+        
+        // Taille aléatoire entre 1 et 3 pixels
+        const size = Math.random() * 2 + 1;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        
+        // Position aléatoire
+        star.style.left = `${Math.random() * 100}vw`;
+        star.style.top = `${Math.random() * 100}vh`;
+        
+        // Durée d'animation aléatoire entre 3 et 8 secondes
+        const duration = Math.random() * 5 + 3;
+        star.style.animationDuration = `${duration}s`;
+        
+        // Délai d'animation aléatoire
+        const delay = Math.random() * 5;
+        star.style.animationDelay = `${delay}s`;
+        
+        starsContainer.appendChild(star);
+    }
+}
 
-    <script>
-        // Création des étoiles animées
-        function createStars() {
-            const starsContainer = document.getElementById('stars');
-            const starCount = 150;
-            
-            for (let i = 0; i < starCount; i++) {
-                const star = document.createElement('div');
-                star.classList.add('star');
-                
-                // Taille aléatoire entre 1 et 3 pixels
-                const size = Math.random() * 2 + 1;
-                star.style.width = `${size}px`;
-                star.style.height = `${size}px`;
-                
-                // Position aléatoire
-                star.style.left = `${Math.random() * 100}vw`;
-                star.style.top = `${Math.random() * 100}vh`;
-                
-                // Durée d'animation aléatoire entre 3 et 8 secondes
-                const duration = Math.random() * 5 + 3;
-                star.style.animationDuration = `${duration}s`;
-                
-                // Délai d'animation aléatoire
-                const delay = Math.random() * 5;
-                star.style.animationDelay = `${delay}s`;
-                
-                starsContainer.appendChild(star);
-            }
-        }
+// Initialiser les étoiles au chargement de la page
+window.addEventListener('load', createStars);
 
-        // Initialiser les étoiles au chargement de la page
-        window.addEventListener('load', createStars);
+// ---------- UTIL ----------
+function escapeHtml(unsafe){ 
+  return (unsafe||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); 
+}
 
-        // Gestion du chat avec OpenAI intégré
-        document.addEventListener('DOMContentLoaded', function() {
-            const chatArea = document.getElementById('chat-area');
-            const messageInput = document.getElementById('message-input');
-            const sendBtn = document.getElementById('send-btn');
-            const newChatBtn = document.getElementById('new-chat-btn');
-            const typingIndicator = document.getElementById('typing-indicator');
-            
-            // Fonction pour ajouter un message au chat
-            function addMessage(text, isUser = false, isError = false) {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message');
-                
-                if (isError) {
-                    messageDiv.classList.add('error-message');
-                } else {
-                    messageDiv.classList.add(isUser ? 'user-message' : 'lygpt-message');
-                }
-                
-                messageDiv.textContent = text;
-                chatArea.appendChild(messageDiv);
-                
-                // Faire défiler vers le bas pour voir le nouveau message
-                chatArea.scrollTop = chatArea.scrollHeight;
-            }
-            
-            // Fonction pour afficher l'indicateur de frappe
-            function showTypingIndicator() {
-                typingIndicator.style.display = 'block';
-                chatArea.scrollTop = chatArea.scrollHeight;
-            }
-            
-            // Fonction pour masquer l'indicateur de frappe
-            function hideTypingIndicator() {
-                typingIndicator.style.display = 'none';
-            }
-            
-            // Fonction pour envoyer un message à l'API OpenAI
-            async function sendMessageToAPI(userMessage) {
-                try {
-                    showTypingIndicator();
-                    
-                    const response = await fetch('/api/chat', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            message: userMessage
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Erreur inconnue');
-                    }
-                    
-                    hideTypingIndicator();
-                    addMessage(data.reply, false);
-                    
-                } catch (error) {
-                    hideTypingIndicator();
-                    console.error('Erreur:', error);
-                    addMessage(`Désolé, une erreur est survenue: ${error.message}`, false, true);
-                }
-            }
-            
-            // Fonction pour envoyer un message
-            function sendMessage() {
-                const message = messageInput.value.trim();
-                if (message) {
-                    // Ajouter le message de l'utilisateur
-                    addMessage(message, true);
-                    
-                    // Effacer le champ de saisie
-                    messageInput.value = '';
-                    
-                    // Envoyer le message à l'API
-                    sendMessageToAPI(message);
-                }
-            }
-            
-            // Événement pour le bouton d'envoi
-            sendBtn.addEventListener('click', sendMessage);
-            
-            // Événement pour la touche Entrée
-            messageInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendMessage();
-                }
-            });
-            
-            // Événement pour le bouton "Nouveau chat"
-            newChatBtn.addEventListener('click', function() {
-                // Effacer tous les messages sauf le premier
-                while (chatArea.children.length > 1) {
-                    chatArea.removeChild(chatArea.lastChild);
-                }
-                
-                // Ajouter un message de confirmation
-                addMessage("Nouveau chat créé ! Comment puis-je vous aider ?", false);
-            });
-            
-            // Événements pour les autres boutons (simulation)
-            document.getElementById('save-chat-btn').addEventListener('click', function() {
-                addMessage("Fonctionnalité de sauvegarde bientôt disponible !", false);
-            });
-            
-            document.getElementById('load-chat-btn').addEventListener('click', function() {
-                addMessage("Fonctionnalité de chargement bientôt disponible !", false);
-            });
-            
-            // Focus sur le champ de saisie au chargement
-            messageInput.focus();
-        });
-    </script>
+// ---------- CHAT RENDERING ----------
+const chatEl = document.getElementById("chat");
+function append(role, text){
+  const d = document.createElement("div");
+  d.className = role === "user" ? "message user-message" : "message lygpt-message";
+  let safe = escapeHtml(text);
+  safe = safe.replace(/```(js|py)?\n([\s\S]*?)```/g, (_,lang,code)=>{
+    return `<pre><code>${escapeHtml(code)}</code></pre>`;
+  }).replace(/\n/g,"<br>");
+  d.innerHTML = `<div>${safe}</div>`;
+  chatEl.appendChild(d);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+// ---------- OPENAI API CALL VIA BACKEND ----------
+async function sendOpenAI(userText){
+  try {
+    const resp = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userText })
+    });
+    const data = await resp.json();
+    return data.reply || "Pas de réponse.";
+  } catch(e) {
+    console.error(e);
+    return "Erreur API OpenAI";
+  }
+}
+
+// ---------- UI WIRING ----------
+document.getElementById("sendBtn").addEventListener("click", send);
+document.getElementById("q").addEventListener("keydown", e => { if(e.key === "Enter") send(); });
+
+async function send(){
+  const qEl = document.getElementById("q");
+  const v = (qEl.value||"").trim();
+  if(!v) return;
+  append("user", v);
+  qEl.value = "";
+  const response = await sendOpenAI(v);
+  append("bot", response);
+}
+
+// Bouton Nouveau Chat
+document.getElementById("new-chat-btn").addEventListener("click", function() {
+  // Effacer tous les messages sauf le premier
+  while (chatEl.children.length > 1) {
+      chatEl.removeChild(chatEl.lastChild);
+  }
+  
+  // Ajouter un message de confirmation
+  append("bot", "Nouveau chat créé ! Comment puis-je vous aider ?");
+});
+
+// Boutons de sauvegarde et chargement (simulation)
+document.getElementById("save-chat-btn").addEventListener("click", function() {
+  append("bot", "Fonctionnalité de sauvegarde bientôt disponible !");
+});
+
+document.getElementById("load-chat-btn").addEventListener("click", function() {
+  append("bot", "Fonctionnalité de chargement bientôt disponible !");
+});
+</script>
 </body>
 </html>
