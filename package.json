@@ -10,13 +10,13 @@
     "vercel-build": "npm run build"
   },
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "dependencies": {
     "parcel": "^2.16.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "openai": "^3.3.0"
+    "openai": "^4.20.0"
   },
   "devDependencies": {
     "rimraf": "^5.0.1"
