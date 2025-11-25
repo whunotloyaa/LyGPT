@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LyGPT - Version Étoilée</title>
+    <title>LyGPT 🚀</title>
     <style>
         * {
             margin: 0;
@@ -39,21 +39,13 @@
         }
 
         @keyframes twinkle {
-            0%, 100% {
-                opacity: 0.2;
-            }
-            50% {
-                opacity: 1;
-            }
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
         }
 
         @keyframes move {
-            0% {
-                transform: translateY(0) translateX(0);
-            }
-            100% {
-                transform: translateY(-100vh) translateX(-20px);
-            }
+            0% { transform: translateY(0) translateX(0); }
+            100% { transform: translateY(-100vh) translateX(-20px); }
         }
 
         /* En-tête */
@@ -112,6 +104,7 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+            max-height: calc(100vh - 200px);
         }
 
         .message {
@@ -120,6 +113,12 @@
             border-radius: 18px;
             line-height: 1.4;
             word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .lygpt-message {
@@ -132,6 +131,43 @@
             align-self: flex-end;
             background-color: rgba(60, 60, 70, 0.8);
             border-bottom-right-radius: 5px;
+        }
+
+        .error-message {
+            align-self: center;
+            background-color: rgba(100, 50, 50, 0.8);
+            border-radius: 18px;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .typing-indicator {
+            align-self: flex-start;
+            background-color: rgba(50, 50, 60, 0.8);
+            border-radius: 18px;
+            padding: 12px 16px;
+            display: none;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #aaa;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
         }
 
         .input-container {
@@ -168,6 +204,11 @@
             background-color: #666;
         }
 
+        .send-btn:disabled {
+            background-color: #333;
+            cursor: not-allowed;
+        }
+
         /* Pied de page */
         footer {
             text-align: center;
@@ -176,6 +217,23 @@
             color: #888;
             background-color: rgba(20, 20, 30, 0.8);
             border-top: 1px solid #444;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-actions {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .action-btn {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
         }
     </style>
 </head>
@@ -197,7 +255,15 @@
     <main>
         <div class="chat-area" id="chat-area">
             <div class="message lygpt-message">
-                Nouveau chat créé ! De quoi veux-tu parler ?
+                Salut ! Je suis LyGPT, créé par Evan Ouanoune. Comment puis-je vous aider aujourd'hui ?
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typing-indicator">
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
             </div>
         </div>
 
@@ -209,7 +275,7 @@
 
     <!-- Pied de page -->
     <footer>
-        Développé et réalisé par Evan Ouanoune !
+        Développé et réalisé par Evan Ouanoune
     </footer>
 
     <script>
@@ -246,32 +312,25 @@
         // Initialiser les étoiles au chargement de la page
         window.addEventListener('load', createStars);
 
-        // Gestion du chat
+        // Gestion du chat avec OpenAI intégré
         document.addEventListener('DOMContentLoaded', function() {
             const chatArea = document.getElementById('chat-area');
             const messageInput = document.getElementById('message-input');
             const sendBtn = document.getElementById('send-btn');
             const newChatBtn = document.getElementById('new-chat-btn');
-            
-            // Réponses pré-définies de LyGPT
-            const responses = [
-                "Je comprends ce que vous voulez dire. Pouvez-vous développer davantage ?",
-                "C'est une question intéressante. Laissez-moi réfléchir à cela...",
-                "D'après mes connaissances, je peux vous dire que...",
-                "Je ne suis pas tout à fait sûr de comprendre. Pouvez-vous reformuler ?",
-                "Merci de partager cela avec moi. Que souhaitez-vous savoir d'autre ?",
-                "C'est un sujet fascinant ! J'aimerais en discuter plus en détail.",
-                "Je vois. Avez-vous considéré d'autres perspectives sur ce sujet ?",
-                "Permettez-moi de vérifier cela pour vous...",
-                "Intéressant ! J'ai quelques informations qui pourraient vous être utiles.",
-                "Je suis là pour vous aider. Que puis-je faire pour vous aujourd'hui ?"
-            ];
+            const typingIndicator = document.getElementById('typing-indicator');
             
             // Fonction pour ajouter un message au chat
-            function addMessage(text, isUser = false) {
+            function addMessage(text, isUser = false, isError = false) {
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('message');
-                messageDiv.classList.add(isUser ? 'user-message' : 'lygpt-message');
+                
+                if (isError) {
+                    messageDiv.classList.add('error-message');
+                } else {
+                    messageDiv.classList.add(isUser ? 'user-message' : 'lygpt-message');
+                }
+                
                 messageDiv.textContent = text;
                 chatArea.appendChild(messageDiv);
                 
@@ -279,9 +338,46 @@
                 chatArea.scrollTop = chatArea.scrollHeight;
             }
             
-            // Fonction pour obtenir une réponse aléatoire de LyGPT
-            function getRandomResponse() {
-                return responses[Math.floor(Math.random() * responses.length)];
+            // Fonction pour afficher l'indicateur de frappe
+            function showTypingIndicator() {
+                typingIndicator.style.display = 'block';
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+            
+            // Fonction pour masquer l'indicateur de frappe
+            function hideTypingIndicator() {
+                typingIndicator.style.display = 'none';
+            }
+            
+            // Fonction pour envoyer un message à l'API OpenAI
+            async function sendMessageToAPI(userMessage) {
+                try {
+                    showTypingIndicator();
+                    
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: userMessage
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Erreur inconnue');
+                    }
+                    
+                    hideTypingIndicator();
+                    addMessage(data.reply, false);
+                    
+                } catch (error) {
+                    hideTypingIndicator();
+                    console.error('Erreur:', error);
+                    addMessage(`Désolé, une erreur est survenue: ${error.message}`, false, true);
+                }
             }
             
             // Fonction pour envoyer un message
@@ -294,10 +390,8 @@
                     // Effacer le champ de saisie
                     messageInput.value = '';
                     
-                    // Simuler un délai de réponse de LyGPT
-                    setTimeout(() => {
-                        addMessage(getRandomResponse());
-                    }, 1000);
+                    // Envoyer le message à l'API
+                    sendMessageToAPI(message);
                 }
             }
             
@@ -319,17 +413,20 @@
                 }
                 
                 // Ajouter un message de confirmation
-                addMessage("Salut ! J'ai été crée par Evan comment puis je vous aidez ?");
+                addMessage("Nouveau chat créé ! Comment puis-je vous aider ?", false);
             });
             
             // Événements pour les autres boutons (simulation)
             document.getElementById('save-chat-btn').addEventListener('click', function() {
-                alert("Chat sauvegardé ! (fonctionnalité simulée)");
+                addMessage("Fonctionnalité de sauvegarde bientôt disponible !", false);
             });
             
             document.getElementById('load-chat-btn').addEventListener('click', function() {
-                alert("Chat chargé ! (fonctionnalité simulée)");
+                addMessage("Fonctionnalité de chargement bientôt disponible !", false);
             });
+            
+            // Focus sur le champ de saisie au chargement
+            messageInput.focus();
         });
     </script>
 </body>
