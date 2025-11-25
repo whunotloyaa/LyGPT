@@ -1,40 +1,42 @@
-import OpenAI from 'openai';
+const { Configuration, OpenAIApi } = require("openai");
 
-export default async function handler(request, response) {
+module.exports = async (req, res) => {
   // Configurer CORS
-  response.setHeader('Access-Control-Allow-Credentials', true);
-  response.setHeader('Access-Control-Allow-Origin', '*');
-  response.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  response.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-  if (request.method === 'OPTIONS') {
-    response.status(200).end();
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
     return;
   }
 
-  if (request.method !== 'POST') {
-    return response.status(405).json({ error: 'Méthode non autorisée' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
   try {
-    const { message } = await request.body;
+    const { message } = req.body;
 
     if (!message) {
-      return response.status(400).json({ error: 'Message requis' });
+      return res.status(400).json({ error: 'Message requis' });
     }
 
-    // Utiliser la clé API depuis les variables d'environnement Vercel
     const apiKey = process.env.OPENAI_API_KEY;
     
     if (!apiKey) {
-      return response.status(500).json({ error: 'Clé API non configurée sur le serveur' });
+      console.error('OPENAI_API_KEY non configurée');
+      return res.status(500).json({ error: 'Clé API non configurée sur le serveur' });
     }
 
-    const openai = new OpenAI({
-      apiKey: apiKey
+    const configuration = new Configuration({
+      apiKey: apiKey,
     });
 
-    const completion = await openai.chat.completions.create({
+    const openai = new OpenAIApi(configuration);
+
+    const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: [
         {
@@ -53,27 +55,26 @@ export default async function handler(request, response) {
       temperature: 0.7
     });
 
-    const reply = completion.choices[0].message.content;
+    const reply = completion.data.choices[0].message.content;
 
-    response.status(200).json({ 
+    res.status(200).json({ 
       reply: reply,
-      usage: completion.usage
+      usage: completion.data.usage
     });
 
   } catch (error) {
-    console.error('Erreur OpenAI:', error);
+    console.error('Erreur OpenAI:', error.response?.data || error.message);
     
-    if (error.status === 401) {
-      return response.status(401).json({ error: 'Clé API invalide - Contactez l\'administrateur' });
-    } else if (error.status === 429) {
-      return response.status(429).json({ error: 'Limite de requêtes dépassée - Réessayez plus tard' });
+    if (error.response?.status === 401) {
+      return res.status(401).json({ error: 'Clé API invalide - Vérifiez votre clé OpenAI' });
+    } else if (error.response?.status === 429) {
+      return res.status(429).json({ error: 'Limite de requêtes dépassée - Réessayez plus tard' });
+    } else if (error.response?.status === 403) {
+      return res.status(403).json({ error: 'Accès refusé - Vérifiez votre abonnement OpenAI' });
     } else {
-      return response.status(500).json({ error: 'Erreur du serveur: ' + error.message });
+      return res.status(500).json({ 
+        error: 'Erreur serveur: ' + (error.response?.data?.error?.message || error.message) 
+      });
     }
   }
-}
-
-
-
-
-
+};
