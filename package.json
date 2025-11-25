@@ -10,7 +10,7 @@
     "vercel-build": "npm run build"
   },
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "dependencies": {
     "parcel": "^2.16.0",
